@@ -29,6 +29,8 @@ app.get('/home', (req,res)=>{
     res.send("GET Request Called HOME page")
 })
 
+
+//Registeration 
 app.post('/register',async (req,res)=>{
     console.log(req.body)
     let Fname = req.body.first_name;
@@ -37,7 +39,6 @@ app.post('/register',async (req,res)=>{
     let email = req.body.email;
     let password = req.body.password;
     console.log(Fname, Lname, contact, email, password)
-    res.send({message:"success", status:200, data:req.body})
     await bcrypt.hash(password, saltRounds, function(err, hash) {
         //Insert in to the table with password and hash
         console.log("=====hash==>",hash)
@@ -45,33 +46,43 @@ app.post('/register',async (req,res)=>{
         con.query(sql,(err,result)=>{
             if(err){
                 console.log(err);
+                res.send({message:"Failed", status:404, data:err.sqlMessage})
             } else{
                 console.log("Record stored successfully")
+                res.send({message:"success", status:200, data:req.body})
             }
         })
     }); 
 })
 
+
+//login
 app.post('/login', async (req,res)=>{
     console.log(req.body)
     let email = req.body.email;
     let password = req.body.password;
-    // let passwordConf = req.body.passwordConf;
     if(req.body !== []){
         console.log(email, password)
-        res.send({message:"success", status:200, data:req.body})
-        //uaseDetails = Select * from Users where email='email'
-        //let Password = userDetails.password
-        let hash = '$2b$10$lH4nkpsEYJpeyTtvegutR.Kf1KrknNcJNVsE09tA2./VkpvbSMnoa'
-        await bcrypt.compare(password, hash, function(err, result) {
-            console.log("compare",result)
-        });
+        con.query (`select * from users where email='${email}'`,async function (err, result, fields){
+            if (err) throw err;
+            console.log(result[0].password);
+            let hash = result[0].password;
+            await bcrypt.compare(password, hash, function(err, result) {
+                console.log("compare",result)
+                if(result == true){
+                    res.send({message:"success", status:200, data:result})
+                    //redirect to user Dashboard.
+                }else{
+                    res.send({message:"Fails", status:404, data:"Please check the Password"})
+                }
+            });
+       })
     }else{
         res.send({message:"Failed", status:400, data:req.body})
     }
 })
 
-app.get('/getTasks',(req,res)=>{
+app.get('/getTasks_list',(req,res)=>{
     res.send("GET Request Called Login page")
 })
 
@@ -83,10 +94,21 @@ app.get('/getTaskStatus',(req,res)=>{
     res.send("GET Request Called Login page")
 })
 
+
+//All User List
 app.get('/getAllusers',(req,res)=>{
    con.query ("select * from users", function (err, result, fields){
         if (err) throw err;
         console.log(result);
         res.send({message:"success", status:200, data:result})
    })
+})
+
+//delete
+app.get('/deleteUser',(req,res)=>{
+    res.send("GET Request Called Login page")
+})
+
+app.get('/deleteTask',(req,res)=>{
+    res.send("GET Request Called Login page")
 })
