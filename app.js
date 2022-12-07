@@ -102,16 +102,16 @@ app.post('/addTasks_list',varifyToken,async (req,res)=>{
     let technologies_used = req.body.technologies_used;
     let time_estimated = req.body.time_estimated;
     let resoure_allocated = req.body.resoure_allocated;
-    let TokenHeadder = req.rawHeaders[1].split(" ")
-    const token = TokenHeadder[2]
+    // let TokenHeadder = req.rawHeaders[1].split(" ")
+    // const token = TokenHeadder[2]
     // console.log("=======Token=====>",token)
     //Varify the JSON token 
-    const verify = await jwt.verify(token,secret,(err,auth)=>{
-        // console.log("auth====>",auth)
-        if(err){
-            console.log(err)
-            res.send({result:"invalid token"})
-        }else{
+    // const verify = await jwt.verify(token,secret,(err,auth)=>{
+    //     // console.log("auth====>",auth)
+    //     if(err){
+    //         console.log(err)
+    //         res.send({result:"invalid token"})
+    //     }else{
             let sql = `INSERT INTO taskList (name,description,technologies_used,time_estimated,resoure_allocated) VALUES ('${name}','${description}','${technologies_used}','${time_estimated}','${resoure_allocated}')`;
             con.query(sql,(err, result)=>{
                 if (err){
@@ -125,8 +125,8 @@ app.post('/addTasks_list',varifyToken,async (req,res)=>{
                     }
                 }
             })
-        }
-    })
+        // }
+    // })
 })
 
 //Get all Tasks
@@ -167,36 +167,33 @@ app.get('/getUserProfile',varifyToken,(req,res)=>{
     })
 })
 
-app.get('/getTaskStatus',varifyToken,(req,res)=>{
-    res.send("GET Request Called Login page")
-})
+// app.get('/getTaskStatus',varifyToken,(req,res)=>{
+//     res.send("GET Request Called Login page")
+// })
 
-app.get('/deleteTask',(req,res)=>{
-    res.send("GET Request Called Login page")
-})
+// app.get('/deleteTask',(req,res)=>{
+//     res.send("GET Request Called Login page")
+// })
 
-//delete
-app.get('/deleteUser',(req,res)=>{
-    res.send("GET Request Called Login page")
-})
+// //delete
+// app.get('/deleteUser',(req,res)=>{
+//     res.send("GET Request Called Login page")
+// })
 
 async function varifyToken (req,res,next) {
-
     let TokenHeadder = req.rawHeaders[1].split(" ")
     const token = TokenHeadder[2]
-    console.log("=======Token==--===>",token)
+    // console.log("=======Token==--===>",token)
     //Varify the JSON token 
     const verify = await jwt.verify(token,secret,(err,auth)=>{
         if(err){
             console.log(err)
-            res.send({result:"invalid token"})
+            res.json({result:"invalid token"})
+        }else{
+            console.log("==============================Token verified successfully")
+            next ();
         }
     })
-
-    console.log("------verify--------",verify)
-
-        console.log("==============================Token verified successfully")
-            next ();
 }
 
 //JWT token intergration
