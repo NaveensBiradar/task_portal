@@ -9,6 +9,15 @@ const con = mysql.createConnection({
 })
 
 // con.connect(function(err) {
+//   if (err) throw err;
+//   console.log("Connected!");
+//   con.query("CREATE DATABASE Task_portal", function (err, result) {
+//     if (err) throw err;
+//     console.log("Database created");
+//   });
+// });
+
+// con.connect(function(err) {
 //     if (err) throw err;
 //     console.log("Connected!");
 //     var sql = "CREATE TABLE users (id int NOT NULL AUTO_INCREMENT,f_name VARCHAR(255),l_name VARCHAR(255),contact VARCHAR(255),email VARCHAR(255),password VARCHAR(255),role VARCHAR(255),PRIMARY KEY (id),UNIQUE (email))";

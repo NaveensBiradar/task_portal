@@ -4,7 +4,11 @@ const PORT = 9001;  //move to .ENV file
 const mysql = require('mysql2')
 const bcrypt = require('bcrypt');
 const saltRounds = 10; //move to .ENV file
+const jwt = require('jsonwebtoken')
+const secret = 'MySecretKey'
 app.use(express.json())
+
+
 
 //Database connectivity
 const con = mysql.createConnection({
@@ -43,6 +47,7 @@ app.post('/register',async (req,res)=>{
                 res.send({message:"Failed", status:404, data:err.sqlMessage})
             } else{
                 console.log("Record stored successfully")
+                console.log("Record",result)
                 res.send({message:"success", status:200, data:req.body})
             }
         })
@@ -67,8 +72,14 @@ app.post('/login', async (req,res)=>{
                 await bcrypt.compare(password, hash, function(err, result) {
                     console.log("compare",result)
                     if(result == true){
-                        res.send({message:"success", status:200, data:result})
                         //redirect to user Dashboard.
+                         // Create a JWT token 
+                         var token = jwt.sign({ email:email}, secret, {
+                            expiresIn: 86400 // expires in 24 hours
+                         });
+                        console.log("JWT Token==>",token);
+                        res.send({message:"success", status:200, data:result, token:token})
+                        
                     }else{
                         res.send({message:"Fails", status:404, data:"Please check the Password"})
                     }
@@ -84,30 +95,42 @@ app.post('/login', async (req,res)=>{
 
 
 //Add taskes 
-app.post('/addTasks_list',(req,res)=>{
+app.post('/addTasks_list',varifyToken,async (req,res)=>{
     console.log(req.body)
     let name = req.body.name;
     let description = req.body.description;
     let technologies_used = req.body.technologies_used;
     let time_estimated = req.body.time_estimated;
     let resoure_allocated = req.body.resoure_allocated;
-    let sql = `INSERT INTO taskList (name,description,technologies_used,time_estimated,resoure_allocated) VALUES ('${name}','${description}','${technologies_used}','${time_estimated}','${resoure_allocated}')`;
-    con.query(sql,(err, result)=>{
-        if (err){
-            res.send({message:"Fails", status:400,data:err})
+    let TokenHeadder = req.rawHeaders[1].split(" ")
+    const token = TokenHeadder[2]
+    // console.log("=======Token=====>",token)
+    //Varify the JSON token 
+    const verify = await jwt.verify(token,secret,(err,auth)=>{
+        // console.log("auth====>",auth)
+        if(err){
+            console.log(err)
+            res.send({result:"invalid token"})
         }else{
-            console.log("result=>",result)
-            if(result.affectedRows == 1){
-                res.send({message:"success", status:200,data:req.body})
-            }else{
-                res.send({message:"Fails", status:400})
-            }
+            let sql = `INSERT INTO taskList (name,description,technologies_used,time_estimated,resoure_allocated) VALUES ('${name}','${description}','${technologies_used}','${time_estimated}','${resoure_allocated}')`;
+            con.query(sql,(err, result)=>{
+                if (err){
+                    res.send({message:"Fails to store the records", status:400,data:err})
+                }else{
+                    // console.log("result=>",result)
+                    if(result.affectedRows == 1){
+                        res.send({message:"successfully stored the data", status:200,data:req.body})
+                    }else{
+                        res.send({message:"Fails", status:400})
+                    }
+                }
+            })
         }
     })
 })
 
 //Get all Tasks
-app.get('/getTasks_list',(req,res)=>{
+app.get('/getTasks_list',varifyToken,(req,res)=>{
     let sql = `SELECT * FROM taskList`;
     con.query(sql,(err,result,fields)=>{
         if(err){
@@ -120,7 +143,7 @@ app.get('/getTasks_list',(req,res)=>{
 })
 
 //All User List
-app.get('/getAllusers',(req,res)=>{
+app.get('/getAllusers',varifyToken,(req,res)=>{
     con.query ("select id,f_name,l_name,contact,email from users", function (err, result, fields){
         if(err){
             res.send({message:"Failed",status:400,data:err})
@@ -132,7 +155,7 @@ app.get('/getAllusers',(req,res)=>{
 })
 
 //Get particular user
-app.get('/getUserProfile',(req,res)=>{
+app.get('/getUserProfile',varifyToken,(req,res)=>{
     let sql = `SELECT * FROM users where id = 1`;
     con.query(sql,(err,result,fields)=>{
         if(err){
@@ -144,8 +167,7 @@ app.get('/getUserProfile',(req,res)=>{
     })
 })
 
-
-app.get('/getTaskStatus',(req,res)=>{
+app.get('/getTaskStatus',varifyToken,(req,res)=>{
     res.send("GET Request Called Login page")
 })
 
@@ -158,3 +180,24 @@ app.get('/deleteUser',(req,res)=>{
     res.send("GET Request Called Login page")
 })
 
+async function varifyToken (req,res,next) {
+
+    let TokenHeadder = req.rawHeaders[1].split(" ")
+    const token = TokenHeadder[2]
+    console.log("=======Token==--===>",token)
+    //Varify the JSON token 
+    const verify = await jwt.verify(token,secret,(err,auth)=>{
+        if(err){
+            console.log(err)
+            res.send({result:"invalid token"})
+        }
+    })
+
+    console.log("------verify--------",verify)
+
+        console.log("==============================Token verified successfully")
+            next ();
+}
+
+//JWT token intergration
+//Jwt package install
