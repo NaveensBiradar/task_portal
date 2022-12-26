@@ -4,7 +4,7 @@ var mysql = require('mysql');
 const con = mysql.createConnection({
     host:'localhost',
     user:'root',
-    password:'root@123',
+    password:'Root@123',
     database:'Task_portal'
 })
 

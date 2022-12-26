@@ -8,13 +8,11 @@ const jwt = require('jsonwebtoken')
 const secret = 'MySecretKey'
 app.use(express.json())
 
-
-
 //Database connectivity
 const con = mysql.createConnection({
     host:'localhost',
     user:'root',
-    password:'root@123',
+    password:'Root@123',
     database:'Task_portal'
 })
 con.connect((err)=>{
@@ -72,14 +70,13 @@ app.post('/login', async (req,res)=>{
                 await bcrypt.compare(password, hash, function(err, result) {
                     console.log("compare",result)
                     if(result == true){
-                        //redirect to user Dashboard.
                          // Create a JWT token 
                          var token = jwt.sign({ email:email}, secret, {
-                            expiresIn: 86400 // expires in 24 hours
+                            expiresIn:  1200// expires in 1 hours testing purpose
                          });
                         console.log("JWT Token==>",token);
+                        //redirect to user Dashboard.
                         res.send({message:"success", status:200, data:result, token:token})
-                        
                     }else{
                         res.send({message:"Fails", status:404, data:"Please check the Password"})
                     }
@@ -102,31 +99,19 @@ app.post('/addTasks_list',varifyToken,async (req,res)=>{
     let technologies_used = req.body.technologies_used;
     let time_estimated = req.body.time_estimated;
     let resoure_allocated = req.body.resoure_allocated;
-    // let TokenHeadder = req.rawHeaders[1].split(" ")
-    // const token = TokenHeadder[2]
-    // console.log("=======Token=====>",token)
-    //Varify the JSON token 
-    // const verify = await jwt.verify(token,secret,(err,auth)=>{
-    //     // console.log("auth====>",auth)
-    //     if(err){
-    //         console.log(err)
-    //         res.send({result:"invalid token"})
-    //     }else{
-            let sql = `INSERT INTO taskList (name,description,technologies_used,time_estimated,resoure_allocated) VALUES ('${name}','${description}','${technologies_used}','${time_estimated}','${resoure_allocated}')`;
-            con.query(sql,(err, result)=>{
-                if (err){
-                    res.send({message:"Fails to store the records", status:400,data:err})
-                }else{
-                    // console.log("result=>",result)
-                    if(result.affectedRows == 1){
-                        res.send({message:"successfully stored the data", status:200,data:req.body})
-                    }else{
-                        res.send({message:"Fails", status:400})
-                    }
-                }
-            })
-        // }
-    // })
+    let sql = `INSERT INTO taskList (name,description,technologies_used,time_estimated,resoure_allocated) VALUES ('${name}','${description}','${technologies_used}','${time_estimated}','${resoure_allocated}')`;
+    con.query(sql,(err, result)=>{
+        if (err){
+            res.send({message:"Fails to store the records", status:400,data:err})
+        }else{
+            // console.log("result=>",result)
+            if(result.affectedRows == 1){
+                res.send({message:"successfully stored the data", status:200,data:req.body})
+            }else{
+                res.send({message:"Fails", status:400})
+            }
+        }
+    })
 })
 
 //Get all Tasks
@@ -187,10 +172,11 @@ async function varifyToken (req,res,next) {
     //Varify the JSON token 
     const verify = await jwt.verify(token,secret,(err,auth)=>{
         if(err){
-            console.log(err)
-            res.json({result:"invalid token"})
+            console.log(err.name)
+            res.json({result:err})
         }else{
-            console.log("==============================Token verified successfully")
+            // console.log("------------",auth)
+            // console.log("==============================Token verified successfully")
             next ();
         }
     })
